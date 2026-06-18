@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SkinNova AI</title>
+    <style>
+      :root {
+        --rose: #d85b77;
+        --rose-dark: #9f3151;
+        --green: #6a994e;
+        --blue: #5b6ee1;
+        --ink: #25212a;
+        --muted: #6f6875;
+        --paper: #fffaf8;
+        --line: #ecd5d9;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: Inter, Segoe UI, Arial, sans-serif;
+        color: var(--ink);
+        background: #f7f3f0;
+      }
+      button, input, textarea, select { font: inherit; }
+      button { cursor: pointer; }
+      .shell { min-height: 100vh; display: grid; grid-template-columns: 280px 1fr; }
+      aside { background: white; border-right: 1px solid var(--line); padding: 24px; position: sticky; top: 0; height: 100vh; }
+      .brand { display: flex; gap: 12px; align-items: center; margin-bottom: 32px; }
+      .logo { width: 42px; height: 42px; border-radius: 8px; background: var(--rose); color: white; display: grid; place-items: center; font-weight: 800; }
+      h1, h2, h3 { margin: 0; }
+      .brand h1 { color: var(--rose-dark); font-size: 22px; }
+      .brand p, .muted { color: var(--muted); margin: 4px 0 0; }
+      .nav button { width: 100%; border: 0; background: transparent; text-align: left; padding: 12px; border-radius: 8px; margin-bottom: 8px; color: var(--ink); }
+      .nav button.active, .primary { background: var(--rose); color: white; }
+      .logout { position: absolute; bottom: 24px; left: 24px; right: 24px; }
+      main { padding: 28px; }
+      header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+      .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+      .card { background: white; border: 1px solid var(--line); border-radius: 8px; padding: 24px; box-shadow: 0 12px 30px rgba(80, 45, 58, .07); }
+      .card-title { display: flex; gap: 12px; align-items: center; margin-bottom: 18px; }
+      .icon { width: 40px; height: 40px; border-radius: 8px; display: grid; place-items: center; color: white; font-weight: 800; }
+      label { display: block; font-weight: 700; margin: 14px 0 8px; }
+      input, textarea, select {
+        width: 100%;
+        border: 1px solid #dbc8cc;
+        background: white;
+        border-radius: 8px;
+        padding: 12px;
+        min-height: 44px;
+      }
+      textarea { min-height: 112px; resize: vertical; }
+      .choices { display: flex; flex-wrap: wrap; gap: 8px; }
+      .choice { border: 1px solid #dbc8cc; background: white; border-radius: 8px; padding: 10px 12px; }
+      .choice.selected { border-color: var(--rose); background: #fff0f4; color: var(--rose-dark); }
+      .primary { border: 0; border-radius: 8px; padding: 14px 22px; font-weight: 800; }
+      .secondary { border: 1px solid var(--line); border-radius: 8px; padding: 12px 16px; background: white; }
+      .wide { grid-column: 1 / -1; }
+      .hidden { display: none !important; }
+      .auth { min-height: 100vh; display: grid; place-items: center; padding: 24px; background: linear-gradient(135deg, #fff7f2, #f4f8f1); }
+      .auth .card { width: min(440px, 100%); }
+      .tabs { display: grid; grid-template-columns: 1fr 1fr; background: #f3ecef; padding: 4px; border-radius: 8px; margin: 20px 0; }
+      .tabs button { border: 0; border-radius: 6px; padding: 10px; background: transparent; }
+      .tabs button.active { background: white; color: var(--rose-dark); box-shadow: 0 4px 12px rgba(80,45,58,.08); }
+      .score { font-size: 64px; font-weight: 900; color: var(--rose-dark); }
+      .metric { background: #f8f5f4; border: 1px solid #e8dcdf; border-radius: 8px; padding: 16px; }
+      .bar { height: 10px; background: white; border-radius: 999px; overflow: hidden; border: 1px solid #eee; }
+      .fill { height: 100%; background: var(--blue); }
+      .products { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+      .product { display: block; text-decoration: none; color: inherit; background: #f4f8f1; border: 1px solid #dcebd3; border-radius: 8px; padding: 14px; }
+      .pill { display: inline-block; margin: 8px 6px 0 0; padding: 5px 8px; border-radius: 6px; background: white; border: 1px solid #dcebd3; font-size: 12px; }
+      .error { color: #b42318; background: #fff1f0; border: 1px solid #ffd3cf; padding: 10px; border-radius: 8px; margin-top: 12px; }
+      @media (max-width: 880px) {
+        .shell { grid-template-columns: 1fr; }
+        aside { position: relative; height: auto; }
+        .logout { position: static; margin-top: 20px; }
+        .grid, .products { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <section id="auth" class="auth">
+      <div class="card">
+        <div class="brand">
+          <div class="logo">SN</div>
+          <div>
+            <h1>SkinNova AI</h1>
+            <p class="muted">Your intelligent skincare companion</p>
+          </div>
+        </div>
+        <div class="tabs">
+          <button id="signinTab" class="active" type="button">Sign In</button>
+          <button id="signupTab" type="button">Sign Up</button>
+        </div>
+        <form id="authForm">
+          <label>Email</label>
+          <input id="email" type="email" required placeholder="you@example.com" />
+          <label>Password</label>
+          <input id="password" type="password" required minlength="6" placeholder="Password" />
+          <button class="primary" style="width: 100%; margin-top: 18px" type="submit">Continue</button>
+          <div id="authError" class="error hidden"></div>
+        </form>
+      </div>
+    </section>
+
+    <section id="app" class="shell hidden">
+      <aside>
+        <div class="brand">
+          <div class="logo">SN</div>
+          <div>
+            <h1>SkinNova AI</h1>
+            <p class="muted">Skin and product intelligence</p>
+          </div>
+        </div>
+        <nav class="nav">
+          <button id="analysisNav" class="active">Skin Analysis</button>
+          <button id="resultsNav">AI Insights</button>
+        </nav>
+        <button id="logout" class="secondary logout">Logout</button>
+      </aside>
+
+      <main>
+        <header>
+          <div>
+            <h2 id="pageTitle">SkinNova AI Analysis</h2>
+            <p class="muted">Authentication, skin image/profile, product input, and AI results.</p>
+          </div>
+          <button id="analyze" class="primary">Start AI Analysis</button>
+        </header>
+
+        <section id="analysisPage" class="grid">
+          <div class="card">
+            <div class="card-title">
+              <div class="icon" style="background: var(--rose)">S</div>
+              <div>
+                <h2>Skin Image and Profile</h2>
+                <p class="muted">Upload a face photo and select your skin details.</p>
+              </div>
+            </div>
+            <label>Skin Image</label>
+            <input id="skinImage" type="file" accept="image/*" />
+            <label>Skin Type</label>
+            <div id="skinTypes" class="choices"></div>
+            <label>Acne Level</label>
+            <div id="acneLevels" class="choices"></div>
+            <label>Known Concerns</label>
+            <div id="concerns" class="choices"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">
+              <div class="icon" style="background: #f08a5d">P</div>
+              <div>
+                <h2>Product Input</h2>
+                <p class="muted">Use image, name, URL, ingredient text, or any combination.</p>
+              </div>
+            </div>
+            <label>Product Image</label>
+            <input id="productImage" type="file" accept="image/*" />
+            <label>Product Name</label>
+            <input id="productName" placeholder="Example: Niacinamide Serum" />
+            <label>Product Link</label>
+            <input id="productUrl" type="url" placeholder="https://example.com/product" />
+            <label>Ingredient List</label>
+            <textarea id="ingredients" placeholder="Example: niacinamide, zinc, glycerin, fragrance"></textarea>
+          </div>
+        </section>
+
+        <section id="resultsPage" class="grid hidden">
+          <div id="emptyResults" class="card wide">
+            <h2>No Analysis Yet</h2>
+            <p class="muted">Complete the form and start AI analysis to see results.</p>
+          </div>
+          <div id="compatibility" class="card wide hidden"></div>
+          <div id="recommendations" class="card wide hidden"></div>
+          <div id="hiddenIssues" class="card wide hidden"></div>
+        </section>
+      </main>
+    </section>
+
+    <script>
+      const API = window.SKINNOVA_API_BASE_URL || (
+        location.hostname === "127.0.0.1" || location.hostname === "localhost"
+          ? "http://127.0.0.1:5004/api"
+          : `${location.origin}/api`
+      );
+      let mode = "login";
+      let selectedSkin = "oily";
+      let selectedAcne = "none";
+      let selectedConcerns = new Set(["pores"]);
+
+      const $ = (id) => document.getElementById(id);
+      const token = () => localStorage.getItem("skinnovaToken");
+
+      function setAuthMode(next) {
+        mode = next;
+        $("signinTab").classList.toggle("active", mode === "login");
+        $("signupTab").classList.toggle("active", mode === "register");
+      }
+
+      function showApp() {
+        $("auth").classList.add("hidden");
+        $("app").classList.remove("hidden");
+      }
+
+      function showAuth() {
+        $("app").classList.add("hidden");
+        $("auth").classList.remove("hidden");
+      }
+
+      function showPage(page) {
+        const results = page === "results";
+        $("analysisPage").classList.toggle("hidden", results);
+        $("resultsPage").classList.toggle("hidden", !results);
+        $("analysisNav").classList.toggle("active", !results);
+        $("resultsNav").classList.toggle("active", results);
+        $("pageTitle").textContent = results ? "AI Analysis Results" : "SkinNova AI Analysis";
+      }
+
+      function makeChoices(container, items, current, onPick, multi = false) {
+        container.innerHTML = "";
+        items.forEach((item) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "choice";
+          btn.textContent = item.label;
+          const selected = multi ? current.has(item.value) : current === item.value;
+          btn.classList.toggle("selected", selected);
+          btn.onclick = () => onPick(item.value);
+          container.appendChild(btn);
+        });
+      }
+
+      function renderChoices() {
+        makeChoices($("skinTypes"), ["oily","dry","normal","combination","sensitive"].map(v => ({ value: v, label: v[0].toUpperCase() + v.slice(1) })), selectedSkin, (v) => { selectedSkin = v; renderChoices(); });
+        makeChoices($("acneLevels"), ["none","mild","moderate","severe"].map(v => ({ value: v, label: v[0].toUpperCase() + v.slice(1) })), selectedAcne, (v) => { selectedAcne = v; renderChoices(); });
+        makeChoices($("concerns"), [
+          { value: "pores", label: "Pores" },
+          { value: "blackheads", label: "Blackheads" },
+          { value: "wrinkles", label: "Wrinkles" },
+          { value: "dark_spots", label: "Dark spots" },
+          { value: "acne", label: "Acne" }
+        ], selectedConcerns, (v) => {
+          selectedConcerns.has(v) ? selectedConcerns.delete(v) : selectedConcerns.add(v);
+          renderChoices();
+        }, true);
+      }
+
+      $("signinTab").onclick = () => setAuthMode("login");
+      $("signupTab").onclick = () => setAuthMode("register");
+      $("analysisNav").onclick = () => showPage("analysis");
+      $("resultsNav").onclick = () => showPage("results");
+      $("logout").onclick = () => { localStorage.removeItem("skinnovaToken"); showAuth(); };
+
+      async function parseApiResponse(response) {
+        const text = await response.text();
+        try {
+          return text ? JSON.parse(text) : {};
+        } catch (error) {
+          return {
+            error: text ? text.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim() : "Server returned an unreadable response."
+          };
+        }
+      }
+
+      async function requestAuth(endpoint) {
+        const response = await fetch(`${API}/${endpoint}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: $("email").value, password: $("password").value })
+        });
+        const data = await parseApiResponse(response);
+        return { response, data, authToken: data.token || data.access_token };
+      }
+
+      $("authForm").onsubmit = async (event) => {
+        event.preventDefault();
+        $("authError").classList.add("hidden");
+        const endpoint = mode === "register" ? "auth/register" : "auth/login";
+        let { response, data, authToken } = await requestAuth(endpoint);
+        if ((!response.ok || !authToken) && mode === "login") {
+          const retry = await requestAuth("auth/register");
+          response = retry.response;
+          data = retry.data;
+          authToken = retry.authToken;
+        }
+        if (!response.ok || !authToken) {
+          $("authError").textContent = data.error || "Authentication failed.";
+          $("authError").classList.remove("hidden");
+          return;
+        }
+        localStorage.setItem("skinnovaToken", authToken);
+        showApp();
+      };
+
+      $("analyze").onclick = async () => {
+        if (!token()) return showAuth();
+        $("analyze").textContent = "Analyzing...";
+        $("analyze").disabled = true;
+        const body = new FormData();
+        const skinImage = $("skinImage").files[0];
+        const productImage = $("productImage").files[0];
+        if (skinImage) body.append("skin_image", skinImage);
+        if (productImage) body.append("product_image", productImage);
+        body.append("skin_type", selectedSkin);
+        body.append("acne_level", selectedAcne);
+        body.append("concerns", JSON.stringify([...selectedConcerns]));
+        body.append("product_name", $("productName").value);
+        body.append("product_url", $("productUrl").value);
+        body.append("ingredients", $("ingredients").value);
+
+        try {
+          const response = await fetch(`${API}/analyze/full`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token()}` },
+            body
+          });
+          const data = await parseApiResponse(response);
+          if (!response.ok) throw new Error(data.error || "Analysis failed.");
+          renderResults(data);
+          showPage("results");
+        } catch (error) {
+          alert(error.message);
+        } finally {
+          $("analyze").textContent = "Start AI Analysis";
+          $("analyze").disabled = false;
+        }
+      };
+
+      function renderResults(data) {
+        $("emptyResults").classList.add("hidden");
+        renderCompatibility(data.compatibility);
+        renderRecommendations(data.recommendations, data.skin_profile);
+        renderHidden(data.hidden_issues);
+      }
+
+      function renderCompatibility(data) {
+        if (!data) return;
+        $("compatibility").classList.remove("hidden");
+        const harmful = (data.harmful_ingredients || []).map(i => `<p><strong>${i.ingredient || i}</strong>${i.detail ? " - " + i.detail : ""}</p>`).join("") || "<p>No major risky ingredients found.</p>";
+        const alternatives = (data.alternatives || []).slice(0, 3).map(p => `<a class="product" href="${p.product_url || "#"}" target="_blank"><strong>${p.name}</strong><br><span class="muted">${p.brand}</span><br><span class="pill">${p.suitability_score}% suitable</span></a>`).join("");
+        $("compatibility").innerHTML = `
+          <div class="card-title"><div class="icon" style="background: var(--rose)">C</div><div><h2>Skin-Product Compatibility Engine</h2><p class="muted">Suitability, harmful ingredients, reasoning, and alternatives.</p></div></div>
+          <div class="grid"><div class="metric"><div class="score">${data.suitability_score}</div><p class="muted">Suitability score out of 100</p></div><div><h3>Reasoning</h3><p>${data.reasoning}</p>${data.input_note ? `<p class="muted">${data.input_note}</p>` : ""}<h3 style="margin-top:16px">Harmful or Risky Ingredients</h3>${harmful}</div></div>
+          ${alternatives ? `<h3 style="margin-top:20px">Alternative product suggestions</h3><div class="products">${alternatives}</div>` : ""}
+        `;
+      }
+
+      function renderRecommendations(data, profile) {
+        $("recommendations").classList.remove("hidden");
+        const cats = [["cleanser","Cleanser"],["moisturizer","Moisturizer"],["sunscreen","Sunscreen"],["treatment","Treatment Products"]];
+        $("recommendations").innerHTML = `<div class="card-title"><div class="icon" style="background: var(--green)">R</div><div><h2>Personalized Product Recommendation System</h2><p class="muted">Based on ${profile.skin_type} skin, ${profile.acne_level} acne level, and detected concerns.</p></div></div>` + cats.map(([key, label]) => {
+          const products = (data[key] || []).map(p => `<a class="product" href="${p.product_url || "#"}" target="_blank"><strong>${p.name}</strong><br><span class="muted">${p.brand}</span><br><span class="pill">${p.rating} rating</span><span class="pill">${p.suitability_score}% suitable</span><p class="muted">${p.reasoning}</p></a>`).join("") || `<p class="muted">No matching ${label.toLowerCase()} found.</p>`;
+          return `<h3 style="margin-top:18px">${label}</h3><div class="products">${products}</div>`;
+        }).join("");
+      }
+
+      function renderHidden(data) {
+        $("hiddenIssues").classList.remove("hidden");
+        const metrics = [
+          ["Early acne formation", data.early_acne_risk],
+          ["Pore blockage risk", data.pore_blockage],
+          ["Texture imbalance", data.texture_imbalance],
+          ["Micro-inflammation", data.micro_inflammation]
+        ].map(([label, value]) => `<div class="metric"><strong>${label}</strong><div style="float:right">${value}%</div><div class="bar" style="margin-top:12px"><div class="fill" style="width:${value}%"></div></div></div>`).join("");
+        $("hiddenIssues").innerHTML = `
+          <div class="card-title"><div class="icon" style="background: var(--blue)">H</div><div><h2>Hidden Skin Issue Detection</h2><p class="muted">Pre-symptom AI for invisible or early skin issues.</p></div></div>
+          <p><strong>AI confidence:</strong> ${data.confidence}%</p>
+          <div class="grid">${metrics}</div>
+          <h3 style="margin-top:18px">AI Findings</h3>
+          ${(data.insights || []).map(i => `<p class="metric">${i}</p>`).join("")}
+        `;
+      }
+
+      renderChoices();
+      token() ? showApp() : showAuth();
+    </script>
+  </body>
+</html>

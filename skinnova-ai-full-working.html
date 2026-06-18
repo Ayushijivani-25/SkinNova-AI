@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SkinNova AI</title>
+    <style>
+      :root {
+        --rose: #d85b77;
+        --rose-dark: #9f3151;
+        --green: #6a994e;
+        --blue: #5b6ee1;
+        --ink: #25212a;
+        --muted: #6f6875;
+        --paper: #fffaf8;
+        --line: #ecd5d9;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: Inter, Segoe UI, Arial, sans-serif;
+        color: var(--ink);
+        background: #f7f3f0;
+      }
+      button, input, textarea, select { font: inherit; }
+      button { cursor: pointer; }
+      .shell { min-height: 100vh; display: grid; grid-template-columns: 280px 1fr; }
+      aside { background: white; border-right: 1px solid var(--line); padding: 24px; position: sticky; top: 0; height: 100vh; }
+      .brand { display: flex; gap: 12px; align-items: center; margin-bottom: 32px; }
+      .logo { width: 42px; height: 42px; border-radius: 8px; background: var(--rose); color: white; display: grid; place-items: center; font-weight: 800; }
+      h1, h2, h3 { margin: 0; }
+      .brand h1 { color: var(--rose-dark); font-size: 22px; }
+      .brand p, .muted { color: var(--muted); margin: 4px 0 0; }
+      .nav button { width: 100%; border: 0; background: transparent; text-align: left; padding: 12px; border-radius: 8px; margin-bottom: 8px; color: var(--ink); }
+      .nav button.active, .primary { background: var(--rose); color: white; }
+      .logout { position: absolute; bottom: 24px; left: 24px; right: 24px; }
+      main { padding: 28px; }
+      header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+      .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+      .card { background: white; border: 1px solid var(--line); border-radius: 8px; padding: 24px; box-shadow: 0 12px 30px rgba(80, 45, 58, .07); }
+      .card-title { display: flex; gap: 12px; align-items: center; margin-bottom: 18px; }
+      .icon { width: 40px; height: 40px; border-radius: 8px; display: grid; place-items: center; color: white; font-weight: 800; }
+      label { display: block; font-weight: 700; margin: 14px 0 8px; }
+      input, textarea, select {
+        width: 100%;
+        border: 1px solid #dbc8cc;
+        background: white;
+        border-radius: 8px;
+        padding: 12px;
+        min-height: 44px;
+      }
+      textarea { min-height: 112px; resize: vertical; }
+      .choices { display: flex; flex-wrap: wrap; gap: 8px; }
+      .choice { border: 1px solid #dbc8cc; background: white; border-radius: 8px; padding: 10px 12px; }
+      .choice.selected { border-color: var(--rose); background: #fff0f4; color: var(--rose-dark); }
+      .primary { border: 0; border-radius: 8px; padding: 14px 22px; font-weight: 800; }
+      .secondary { border: 1px solid var(--line); border-radius: 8px; padding: 12px 16px; background: white; }
+      .wide { grid-column: 1 / -1; }
+      .hidden { display: none !important; }
+      .auth { min-height: 100vh; display: grid; place-items: center; padding: 24px; background: linear-gradient(135deg, #fff7f2, #f4f8f1); }
+      .auth .card { width: min(440px, 100%); }
+      .tabs { display: grid; grid-template-columns: 1fr 1fr; background: #f3ecef; padding: 4px; border-radius: 8px; margin: 20px 0; }
+      .tabs button { border: 0; border-radius: 6px; padding: 10px; background: transparent; }
+      .tabs button.active { background: white; color: var(--rose-dark); box-shadow: 0 4px 12px rgba(80,45,58,.08); }
+      .score { font-size: 64px; font-weight: 900; color: var(--rose-dark); }
+      .metric { background: #f8f5f4; border: 1px solid #e8dcdf; border-radius: 8px; padding: 16px; }
+      .bar { height: 10px; background: white; border-radius: 999px; overflow: hidden; border: 1px solid #eee; }
+      .fill { height: 100%; background: var(--blue); }
+      .products { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+      .product { display: block; text-decoration: none; color: inherit; background: #f4f8f1; border: 1px solid #dcebd3; border-radius: 8px; padding: 14px; }
+      .pill { display: inline-block; margin: 8px 6px 0 0; padding: 5px 8px; border-radius: 6px; background: white; border: 1px solid #dcebd3; font-size: 12px; }
+      .error { color: #b42318; background: #fff1f0; border: 1px solid #ffd3cf; padding: 10px; border-radius: 8px; margin-top: 12px; }
+      @media (max-width: 880px) {
+        .shell { grid-template-columns: 1fr; }
+        aside { position: relative; height: auto; }
+        .logout { position: static; margin-top: 20px; }
+        .grid, .products { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <section id="auth" class="auth">
+      <div class="card">
+        <div class="brand">
+          <div class="logo">SN</div>
+          <div>
+            <h1>SkinNova AI</h1>
+            <p class="muted">Your intelligent skincare companion</p>
+          </div>
+        </div>
+        <div class="tabs">
+          <button id="signinTab" class="active" type="button">Sign In</button>
+          <button id="signupTab" type="button">Sign Up</button>
+        </div>
+        <form id="authForm">
+          <label>Email</label>
+          <input id="email" type="email" required placeholder="you@example.com" />
+          <label>Password</label>
+          <input id="password" type="password" required minlength="6" placeholder="Password" />
+          <button class="primary" style="width: 100%; margin-top: 18px" type="submit">Continue</button>
+          <div id="authError" class="error hidden"></div>
+        </form>
+      </div>
+    </section>
+
+    <section id="app" class="shell hidden">
+      <aside>
+        <div class="brand">
+          <div class="logo">SN</div>
+          <div>
+            <h1>SkinNova AI</h1>
+            <p class="muted">Skin and product intelligence</p>
+          </div>
+        </div>
+        <nav class="nav">
+          <button id="analysisNav" class="active">Skin Analysis</button>
+          <button id="resultsNav">AI Insights</button>
+        </nav>
+        <button id="logout" class="secondary logout">Logout</button>
+      </aside>
+
+      <main>
+        <header>
+          <div>
+            <h2 id="pageTitle">SkinNova AI Analysis</h2>
+            <p class="muted">Authentication, skin image/profile, product input, and AI results.</p>
+          </div>
+          <button id="analyze" class="primary">Start AI Analysis</button>
+        </header>
+
+        <section id="analysisPage" class="grid">
+          <div class="card">
+            <div class="card-title">
+              <div class="icon" style="background: var(--rose)">S</div>
+              <div>
+                <h2>Skin Image and Profile</h2>
+                <p class="muted">Upload a face photo and select your skin details.</p>
+              </div>
+            </div>
+            <label>Skin Image</label>
+            <input id="skinImage" type="file" accept="image/*" />
+            <label>Skin Type</label>
+            <div id="skinTypes" class="choices"></div>
+            <label>Acne Level</label>
+            <div id="acneLevels" class="choices"></div>
+            <label>Known Concerns</label>
+            <div id="concerns" class="choices"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">
+              <div class="icon" style="background: #f08a5d">P</div>
+              <div>
+                <h2>Product Input</h2>
+                <p class="muted">Use image, name, URL, ingredient text, or any combination.</p>
+              </div>
+            </div>
+            <label>Product Image</label>
+            <input id="productImage" type="file" accept="image/*" />
+            <label>Product Name</label>
+            <input id="productName" placeholder="Example: Niacinamide Serum" />
+            <label>Product Link</label>
+            <input id="productUrl" type="url" placeholder="https://example.com/product" />
+            <label>Ingredient List</label>
+            <textarea id="ingredients" placeholder="Example: niacinamide, zinc, glycerin, fragrance"></textarea>
+          </div>
+        </section>
+
+        <section id="resultsPage" class="grid hidden">
+          <div id="emptyResults" class="card wide">
+            <h2>No Analysis Yet</h2>
+            <p class="muted">Complete the form and start AI analysis to see results.</p>
+          </div>
+          <div id="compatibility" class="card wide hidden"></div>
+          <div id="recommendations" class="card wide hidden"></div>
+          <div id="hiddenIssues" class="card wide hidden"></div>
+        </section>
+      </main>
+    </section>
+
+    <script>
+      const API = null;
+      let mode = "login";
+      let selectedSkin = "oily";
+      let selectedAcne = "none";
+      let selectedConcerns = new Set(["pores"]);
+
+      const $ = (id) => document.getElementById(id);
+      const token = () => localStorage.getItem("skinnovaToken");
+
+      function setAuthMode(next) {
+        mode = next;
+        $("signinTab").classList.toggle("active", mode === "login");
+        $("signupTab").classList.toggle("active", mode === "register");
+      }
+
+      function showApp() {
+        $("auth").classList.add("hidden");
+        $("app").classList.remove("hidden");
+      }
+
+      function showAuth() {
+        $("app").classList.add("hidden");
+        $("auth").classList.remove("hidden");
+      }
+
+      function showPage(page) {
+        const results = page === "results";
+        $("analysisPage").classList.toggle("hidden", results);
+        $("resultsPage").classList.toggle("hidden", !results);
+        $("analysisNav").classList.toggle("active", !results);
+        $("resultsNav").classList.toggle("active", results);
+        $("pageTitle").textContent = results ? "AI Analysis Results" : "SkinNova AI Analysis";
+      }
+
+      function makeChoices(container, items, current, onPick, multi = false) {
+        container.innerHTML = "";
+        items.forEach((item) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "choice";
+          btn.textContent = item.label;
+          const selected = multi ? current.has(item.value) : current === item.value;
+          btn.classList.toggle("selected", selected);
+          btn.onclick = () => onPick(item.value);
+          container.appendChild(btn);
+        });
+      }
+
+      function renderChoices() {
+        makeChoices($("skinTypes"), ["oily","dry","normal","combination","sensitive"].map(v => ({ value: v, label: v[0].toUpperCase() + v.slice(1) })), selectedSkin, (v) => { selectedSkin = v; renderChoices(); });
+        makeChoices($("acneLevels"), ["none","mild","moderate","severe"].map(v => ({ value: v, label: v[0].toUpperCase() + v.slice(1) })), selectedAcne, (v) => { selectedAcne = v; renderChoices(); });
+        makeChoices($("concerns"), [
+          { value: "pores", label: "Pores" },
+          { value: "blackheads", label: "Blackheads" },
+          { value: "wrinkles", label: "Wrinkles" },
+          { value: "dark_spots", label: "Dark spots" },
+          { value: "acne", label: "Acne" }
+        ], selectedConcerns, (v) => {
+          selectedConcerns.has(v) ? selectedConcerns.delete(v) : selectedConcerns.add(v);
+          renderChoices();
+        }, true);
+      }
+
+      $("signinTab").onclick = () => setAuthMode("login");
+      $("signupTab").onclick = () => setAuthMode("register");
+      $("analysisNav").onclick = () => showPage("analysis");
+      $("resultsNav").onclick = () => showPage("results");
+      $("logout").onclick = () => { localStorage.removeItem("skinnovaToken"); showAuth(); };
+
+      async function parseApiResponse(response) {
+        const text = await response.text();
+        try {
+          return text ? JSON.parse(text) : {};
+        } catch (error) {
+          return {
+            error: text ? text.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim() : "Server returned an unreadable response."
+          };
+        }
+      }
+
+      async function requestAuth(endpoint) {
+        const email = $("email").value.trim().toLowerCase();
+        const password = $("password").value;
+        if (!email || password.length < 6) {
+          return {
+            response: { ok: false },
+            data: { error: "Enter a valid email and a password with at least 6 characters." },
+            authToken: null
+          };
+        }
+
+        const users = JSON.parse(localStorage.getItem("skinnovaUsers") || "{}");
+        if (endpoint.includes("register") || !users[email]) {
+          users[email] = { email, password };
+          localStorage.setItem("skinnovaUsers", JSON.stringify(users));
+        }
+
+        if (users[email].password !== password) {
+          return {
+            response: { ok: false },
+            data: { error: "Invalid email or password." },
+            authToken: null
+          };
+        }
+
+        return {
+          response: { ok: true },
+          data: { token: `local-${Date.now()}`, user_id: email, username: email.split("@")[0] },
+          authToken: `local-${Date.now()}`
+        };
+      }
+
+      $("authForm").onsubmit = async (event) => {
+        event.preventDefault();
+        $("authError").classList.add("hidden");
+        const endpoint = mode === "register" ? "auth/register" : "auth/login";
+        let { response, data, authToken } = await requestAuth(endpoint);
+        if ((!response.ok || !authToken) && mode === "login") {
+          const retry = await requestAuth("auth/register");
+          response = retry.response;
+          data = retry.data;
+          authToken = retry.authToken;
+        }
+        if (!response.ok || !authToken) {
+          $("authError").textContent = data.error || "Authentication failed.";
+          $("authError").classList.remove("hidden");
+          return;
+        }
+        localStorage.setItem("skinnovaToken", authToken);
+        showApp();
+      };
+
+      $("analyze").onclick = async () => {
+        if (!token()) return showAuth();
+        $("analyze").textContent = "Analyzing...";
+        $("analyze").disabled = true;
+        const skinImage = $("skinImage").files[0];
+        const productImage = $("productImage").files[0];
+        try {
+          await new Promise(resolve => setTimeout(resolve, 650));
+          const data = generateStandaloneAnalysis({
+            skinImage,
+            productImage,
+            skinType: selectedSkin,
+            acneLevel: selectedAcne,
+            concerns: [...selectedConcerns],
+            productName: $("productName").value,
+            productUrl: $("productUrl").value,
+            ingredients: $("ingredients").value
+          });
+          renderResults(data);
+          showPage("results");
+        } catch (error) {
+          alert(error.message);
+        } finally {
+          $("analyze").textContent = "Start AI Analysis";
+          $("analyze").disabled = false;
+        }
+      };
+
+      function generateStandaloneAnalysis(input) {
+        const profile = {
+          skin_type: input.skinType || "normal",
+          acne_level: input.acneLevel || "none",
+          concerns: input.concerns || [],
+          source: input.skinImage ? "image_and_manual" : "manual"
+        };
+        return {
+          skin_profile: profile,
+          compatibility: buildCompatibility(input, profile),
+          recommendations: buildRecommendations(profile),
+          hidden_issues: buildHiddenIssues(profile)
+        };
+      }
+
+      function ingredientTokens(text) {
+        return (text || "").toLowerCase();
+      }
+
+      function hasAny(text, words) {
+        return words.some(word => text.includes(word));
+      }
+
+      function buildCompatibility(input, profile) {
+        const ingredients = ingredientTokens(input.ingredients || fallbackIngredients(input.productName, input.productUrl, profile.skin_type));
+        let score = 70;
+        const harmful = [];
+        const beneficial = [];
+        const risky = [
+          ["fragrance", "medium", "Common irritant, especially for sensitive or inflamed skin.", 10],
+          ["alcohol denat", "medium", "Can dry the skin barrier and worsen dehydration.", 10],
+          ["paraben", "medium", "Potentially controversial preservative for some users.", 8],
+          ["sodium lauryl sulfate", "medium", "Harsh cleanser that can disrupt the skin barrier.", 10],
+          ["coconut oil", "low", "Can clog pores for acne-prone or oily skin.", 6],
+          ["isopropyl myristate", "medium", "Highly comedogenic for breakout-prone skin.", 12],
+          ["mineral oil", "low", "May feel heavy or occlusive on oily skin.", 5]
+        ];
+        risky.forEach(([ingredient, risk, detail, penalty]) => {
+          if (ingredients.includes(ingredient)) {
+            score -= penalty;
+            harmful.push({ ingredient, risk, detail });
+          }
+        });
+
+        const helpfulBySkin = {
+          oily: ["niacinamide", "zinc", "salicylic acid", "tea tree", "kaolin"],
+          dry: ["hyaluronic acid", "glycerin", "ceramide", "squalane", "shea"],
+          combination: ["niacinamide", "hyaluronic acid", "glycerin"],
+          sensitive: ["centella", "ceramide", "aloe", "oat", "panthenol"],
+          normal: ["hyaluronic acid", "niacinamide", "vitamin c", "glycerin"]
+        };
+        (helpfulBySkin[profile.skin_type] || []).forEach(item => {
+          if (ingredients.includes(item)) {
+            score += 5;
+            beneficial.push(`${item} supports ${profile.skin_type} skin`);
+          }
+        });
+
+        if (profile.concerns.includes("acne") && hasAny(ingredients, ["salicylic acid", "benzoyl peroxide", "niacinamide"])) score += 8;
+        if (profile.concerns.includes("pores") && hasAny(ingredients, ["niacinamide", "salicylic acid", "zinc"])) score += 6;
+        if (profile.concerns.includes("dark_spots") && hasAny(ingredients, ["vitamin c", "alpha arbutin", "niacinamide"])) score += 6;
+        if (profile.skin_type === "dry" && hasAny(ingredients, ["alcohol denat", "salicylic acid"])) score -= 8;
+        if (profile.skin_type === "sensitive" && hasAny(ingredients, ["fragrance", "alcohol denat"])) score -= 10;
+
+        score = Math.max(0, Math.min(100, Math.round(score)));
+        const productType = guessProductType(input.productName, input.productUrl, ingredients);
+        return {
+          product_name: input.productName || "User product",
+          suitability_score: score,
+          reasoning: `${score >= 80 ? "Highly suitable" : score >= 60 ? "Moderately suitable" : "Use with caution"} for ${profile.skin_type} skin. ${harmful.length ? `Detected ${harmful.length} risky ingredient(s).` : "No major risky ingredient pattern detected."} ${beneficial.length ? `Found ${beneficial.length} helpful match(es) for your profile.` : ""}`,
+          harmful_ingredients: harmful,
+          beneficial_ingredients: beneficial.slice(0, 5),
+          alternatives: productCatalog[productType || "treatment"].slice(0, 3)
+        };
+      }
+
+      function fallbackIngredients(name, url, skinType) {
+        const text = `${name || ""} ${url || ""}`.toLowerCase();
+        if (text.includes("spf") || text.includes("sunscreen")) return "zinc oxide, niacinamide, glycerin";
+        if (text.includes("cleanser") || text.includes("face wash")) return "glycerin, niacinamide, panthenol";
+        if (text.includes("moisturizer") || text.includes("cream")) return "glycerin, ceramide, hyaluronic acid, squalane";
+        if (skinType === "oily") return "niacinamide, zinc, salicylic acid, glycerin";
+        if (skinType === "dry") return "hyaluronic acid, glycerin, ceramide, squalane";
+        return "niacinamide, glycerin, hyaluronic acid";
+      }
+
+      function guessProductType(name, url, ingredients) {
+        const text = `${name || ""} ${url || ""} ${ingredients || ""}`.toLowerCase();
+        if (hasAny(text, ["cleanser", "face wash", "foaming"])) return "cleanser";
+        if (hasAny(text, ["moisturizer", "cream", "lotion"])) return "moisturizer";
+        if (hasAny(text, ["spf", "sunscreen", "uv"])) return "sunscreen";
+        return "treatment";
+      }
+
+      const productCatalog = {
+        cleanser: [
+          { name: "Barrier Balance Gel Cleanser", brand: "SkinNova Lab", rating: 4.7, suitability_score: 91, product_url: "#", reasoning: "Gentle cleanse with glycerin and niacinamide support." },
+          { name: "Pore Reset BHA Cleanser", brand: "DermaClear", rating: 4.6, suitability_score: 88, product_url: "#", reasoning: "Good for oily skin, pores, blackheads, and mild acne." },
+          { name: "Hydra Soft Cream Cleanser", brand: "CalmSkin", rating: 4.5, suitability_score: 86, product_url: "#", reasoning: "Better for dry or sensitive skin barrier support." }
+        ],
+        moisturizer: [
+          { name: "Ceramide Cloud Moisturizer", brand: "SkinNova Lab", rating: 4.8, suitability_score: 93, product_url: "#", reasoning: "Ceramides and humectants help repair dehydration and texture imbalance." },
+          { name: "Oil-Free Niacinamide Gel", brand: "ClearDerm", rating: 4.6, suitability_score: 90, product_url: "#", reasoning: "Lightweight hydration for oily and combination skin." },
+          { name: "Squalane Barrier Cream", brand: "CalmSkin", rating: 4.5, suitability_score: 87, product_url: "#", reasoning: "Cushions dry skin without harsh actives." }
+        ],
+        sunscreen: [
+          { name: "Daily Mineral SPF 50", brand: "SunShield", rating: 4.7, suitability_score: 92, product_url: "#", reasoning: "Mineral UV protection with low irritation risk." },
+          { name: "Oil Control Gel SPF 50", brand: "ClearDerm", rating: 4.5, suitability_score: 89, product_url: "#", reasoning: "Good for shiny T-zone and pore-prone skin." },
+          { name: "Hydrating Dew SPF 50", brand: "AquaSkin", rating: 4.4, suitability_score: 86, product_url: "#", reasoning: "Better for dry or normal skin needing hydration." }
+        ],
+        treatment: [
+          { name: "Niacinamide + Zinc Serum", brand: "SkinNova Lab", rating: 4.8, suitability_score: 94, product_url: "#", reasoning: "Targets pores, oil balance, and early breakout risk." },
+          { name: "2% Salicylic Pore Treatment", brand: "DermaClear", rating: 4.6, suitability_score: 90, product_url: "#", reasoning: "Helpful for blackheads, acne, and pore congestion." },
+          { name: "Centella Barrier Repair Serum", brand: "CalmSkin", rating: 4.7, suitability_score: 88, product_url: "#", reasoning: "Calming support for micro-inflammation and sensitivity." }
+        ]
+      };
+
+      function buildRecommendations(profile) {
+        const recs = {};
+        Object.keys(productCatalog).forEach(category => {
+          recs[category] = productCatalog[category].map(product => ({
+            ...product,
+            suitability_score: adjustScore(product.suitability_score, profile, category)
+          })).sort((a, b) => b.suitability_score - a.suitability_score);
+        });
+        return recs;
+      }
+
+      function adjustScore(base, profile, category) {
+        let score = base;
+        if (profile.skin_type === "oily" && ["cleanser", "treatment", "sunscreen"].includes(category)) score += 2;
+        if (profile.skin_type === "dry" && category === "moisturizer") score += 3;
+        if (profile.acne_level === "moderate" || profile.acne_level === "severe") {
+          if (["cleanser", "treatment"].includes(category)) score += 4;
+        }
+        if (profile.concerns.includes("dark_spots") && category === "sunscreen") score += 3;
+        return Math.max(70, Math.min(99, Math.round(score)));
+      }
+
+      function buildHiddenIssues(profile) {
+        const acneBase = { none: 18, mild: 46, moderate: 68, severe: 86 }[profile.acne_level] || 28;
+        const pore = (profile.skin_type === "oily" || profile.skin_type === "combination" ? 62 : 28) + (profile.concerns.includes("pores") ? 16 : 0);
+        const texture = 42 + (profile.skin_type === "dry" || profile.skin_type === "combination" ? 18 : 0) + (profile.concerns.includes("wrinkles") ? 12 : 0);
+        const inflammation = Math.round(acneBase * 0.65 + (profile.concerns.includes("acne") ? 18 : 0));
+        const earlyAcne = Math.min(95, acneBase + (profile.concerns.includes("blackheads") ? 12 : 0));
+        const insights = [];
+        if (earlyAcne >= 45) insights.push("Early acne formation risk detected in cheek region.");
+        if (pore >= 45) insights.push("Pore congestion likely in T-zone.");
+        if (texture >= 45) insights.push("Skin texture imbalance indicates dehydration and oil mix.");
+        if (inflammation >= 45) insights.push("Micro-inflammation patterns suggest barrier stress.");
+        if (!insights.length) insights.push("No major hidden issue pattern detected right now.");
+        return {
+          early_acne_risk: earlyAcne,
+          pore_blockage: Math.min(95, pore),
+          texture_imbalance: Math.min(95, texture),
+          micro_inflammation: Math.min(95, inflammation),
+          confidence: profile.source === "image_and_manual" ? 88 : 76,
+          insights
+        };
+      }
+
+      function renderResults(data) {
+        $("emptyResults").classList.add("hidden");
+        renderCompatibility(data.compatibility);
+        renderRecommendations(data.recommendations, data.skin_profile);
+        renderHidden(data.hidden_issues);
+      }
+
+      function renderCompatibility(data) {
+        if (!data) return;
+        $("compatibility").classList.remove("hidden");
+        const harmful = (data.harmful_ingredients || []).map(i => `<p><strong>${i.ingredient || i}</strong>${i.detail ? " - " + i.detail : ""}</p>`).join("") || "<p>No major risky ingredients found.</p>";
+        const alternatives = (data.alternatives || []).slice(0, 3).map(p => `<a class="product" href="${p.product_url || "#"}" target="_blank"><strong>${p.name}</strong><br><span class="muted">${p.brand}</span><br><span class="pill">${p.suitability_score}% suitable</span></a>`).join("");
+        $("compatibility").innerHTML = `
+          <div class="card-title"><div class="icon" style="background: var(--rose)">C</div><div><h2>Skin-Product Compatibility Engine</h2><p class="muted">Suitability, harmful ingredients, reasoning, and alternatives.</p></div></div>
+          <div class="grid"><div class="metric"><div class="score">${data.suitability_score}</div><p class="muted">Suitability score out of 100</p></div><div><h3>Reasoning</h3><p>${data.reasoning}</p>${data.input_note ? `<p class="muted">${data.input_note}</p>` : ""}<h3 style="margin-top:16px">Harmful or Risky Ingredients</h3>${harmful}</div></div>
+          ${alternatives ? `<h3 style="margin-top:20px">Alternative product suggestions</h3><div class="products">${alternatives}</div>` : ""}
+        `;
+      }
+
+      function renderRecommendations(data, profile) {
+        $("recommendations").classList.remove("hidden");
+        const cats = [["cleanser","Cleanser"],["moisturizer","Moisturizer"],["sunscreen","Sunscreen"],["treatment","Treatment Products"]];
+        $("recommendations").innerHTML = `<div class="card-title"><div class="icon" style="background: var(--green)">R</div><div><h2>Personalized Product Recommendation System</h2><p class="muted">Based on ${profile.skin_type} skin, ${profile.acne_level} acne level, and detected concerns.</p></div></div>` + cats.map(([key, label]) => {
+          const products = (data[key] || []).map(p => `<a class="product" href="${p.product_url || "#"}" target="_blank"><strong>${p.name}</strong><br><span class="muted">${p.brand}</span><br><span class="pill">${p.rating} rating</span><span class="pill">${p.suitability_score}% suitable</span><p class="muted">${p.reasoning}</p></a>`).join("") || `<p class="muted">No matching ${label.toLowerCase()} found.</p>`;
+          return `<h3 style="margin-top:18px">${label}</h3><div class="products">${products}</div>`;
+        }).join("");
+      }
+
+      function renderHidden(data) {
+        $("hiddenIssues").classList.remove("hidden");
+        const metrics = [
+          ["Early acne formation", data.early_acne_risk],
+          ["Pore blockage risk", data.pore_blockage],
+          ["Texture imbalance", data.texture_imbalance],
+          ["Micro-inflammation", data.micro_inflammation]
+        ].map(([label, value]) => `<div class="metric"><strong>${label}</strong><div style="float:right">${value}%</div><div class="bar" style="margin-top:12px"><div class="fill" style="width:${value}%"></div></div></div>`).join("");
+        $("hiddenIssues").innerHTML = `
+          <div class="card-title"><div class="icon" style="background: var(--blue)">H</div><div><h2>Hidden Skin Issue Detection</h2><p class="muted">Pre-symptom AI for invisible or early skin issues.</p></div></div>
+          <p><strong>AI confidence:</strong> ${data.confidence}%</p>
+          <div class="grid">${metrics}</div>
+          <h3 style="margin-top:18px">AI Findings</h3>
+          ${(data.insights || []).map(i => `<p class="metric">${i}</p>`).join("")}
+        `;
+      }
+
+      renderChoices();
+      token() ? showApp() : showAuth();
+    </script>
+  </body>
+</html>

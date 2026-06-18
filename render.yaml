@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: skinnova-ai
+    env: python
+    rootDir: backend
+    buildCommand: pip install -r requirements-deploy.txt
+    startCommand: gunicorn wsgi:app
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: SKINNOVA_USE_TENSORFLOW
+        value: "0"
+      - key: SKINNOVA_DB_PATH
+        value: /var/data/skinnova.db
+      - key: SKINNOVA_FRONTEND_DIR
+        value: /opt/render/project/src/frontend
+    disk:
+      name: skinnova-data
+      mountPath: /var/data
+      sizeGB: 1

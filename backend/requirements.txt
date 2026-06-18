@@ -1,0 +1,26 @@
+# SkinNova AI – Python Dependencies
+# Install: pip install -r requirements.txt
+
+# ── Web Framework ─────────────────────────────────────
+flask==3.0.3
+flask-cors==4.0.1
+flask-jwt-extended==4.6.0
+werkzeug==3.0.3
+
+# ── ML / Computer Vision ─────────────────────────────
+tensorflow==2.16.1          # GPU: tensorflow[and-cuda]
+Pillow==10.3.0
+numpy==1.26.4
+scikit-learn==1.5.0
+seaborn==0.13.2
+matplotlib==3.9.0
+
+# ── Data ─────────────────────────────────────────────
+pandas==2.2.2
+
+# ── HTTP / APIs ──────────────────────────────────────
+requests==2.32.3
+
+# ── Utilities ────────────────────────────────────────
+python-dotenv==1.0.1
+gunicorn==22.0.0            # Production WSGI server
